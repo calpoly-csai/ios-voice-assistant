@@ -45,6 +45,7 @@ class DataCollectionViewController: UIViewController {
     // MARK: - Configuration
     
     private func configureViews() {
+        navigationItem.title = "Nimbus Data Collection"
         view.backgroundColor = .white
         
         view.addSubview(recordButton)
