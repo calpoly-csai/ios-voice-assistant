@@ -19,6 +19,7 @@ class DataCollectionViewController: UIViewController {
     let recordButton: UIButton = {
         let button = UIButton()
         
+        button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = .red
         button.setTitle("Tap to Record", for: .normal)
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .title1)
@@ -44,10 +45,13 @@ class DataCollectionViewController: UIViewController {
     // MARK: - Configuration
     
     private func configureViews() {
+        navigationItem.title = "Nimbus Data Collection"
         view.backgroundColor = .white
         
         view.addSubview(recordButton)
-        recordButton.anchor(top: view.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 100, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 100)
+        print(view.centerXAnchor)
+        recordButton.anchor(top: view.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 350, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 100)
+        view.addSubview(recordButton)
     }
     
     // MARK: - Recording
