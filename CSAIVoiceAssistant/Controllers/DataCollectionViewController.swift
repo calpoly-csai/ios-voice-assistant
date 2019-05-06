@@ -81,7 +81,7 @@ class DataCollectionViewController: UIViewController {
             AVLinearPCMBitDepthKey: Constants.BIT_DEPTH,
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
             AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
         ] as [String : Any]
         
         do {
