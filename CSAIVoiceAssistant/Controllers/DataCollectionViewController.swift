@@ -56,6 +56,7 @@ class DataCollectionViewController: UIViewController {
         recordingSession = AVAudioSession.sharedInstance()
         
         do {
+            try recordingSession.setPreferredSampleRate(Constants.SAMPLE_RATE_HZ)
             try recordingSession.setCategory(.playAndRecord, mode: .default)
             try recordingSession.setActive(true)
             recordingSession.requestRecordPermission() { [unowned self] allowed in
@@ -76,11 +77,12 @@ class DataCollectionViewController: UIViewController {
         let audioFilename = getDocumentsDirectory().appendingPathComponent("recording.m4a")
         
         let settings = [
+            AVSampleRateKey: Constants.SAMPLE_RATE_HZ,
+            AVLinearPCMBitDepthKey: Constants.BIT_DEPTH,
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 12000,
             AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-        ]
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+        ] as [String : Any]
         
         do {
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
