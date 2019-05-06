@@ -18,6 +18,12 @@ class DataCollectionViewController: UIViewController {
     
     let recordButton: UIButton = {
         let button = UIButton()
+        
+        button.backgroundColor = .red
+        button.setTitle("Tap to Record", for: .normal)
+        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .title1)
+        button.addTarget(self, action: #selector(recordTapped), for: .touchUpInside)
+        
         button.layer.cornerRadius = 8
         button.layer.shadowOffset = CGSize(width: 3, height: 3)
         button.layer.shadowColor = UIColor.black.cgColor
@@ -39,10 +45,7 @@ class DataCollectionViewController: UIViewController {
     
     private func configureViews() {
         view.backgroundColor = .white
-        recordButton.backgroundColor = .red
-        recordButton.setTitle("Tap to Record", for: .normal)
-        recordButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .title1)
-        recordButton.addTarget(self, action: #selector(recordTapped), for: .touchUpInside)
+        
         view.addSubview(recordButton)
         recordButton.anchor(top: view.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 100, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 100)
     }
