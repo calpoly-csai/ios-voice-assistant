@@ -24,8 +24,8 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Need microphone access for uploading videos</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is used for Nimbus wake-word training data collection</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>

@@ -9,7 +9,7 @@
 import UIKit
 import AVFoundation
 
-class DataCollectionViewController: UIViewController, AVAudioRecorderDelegate {
+class DataCollectionViewController: UIViewController {
     
     // MARK: - Properties
     
@@ -22,10 +22,10 @@ class DataCollectionViewController: UIViewController, AVAudioRecorderDelegate {
         button.layer.shadowOffset = CGSize(width: 3, height: 3)
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowRadius = 4
-
+        
         return button
     }()
-
+    
     // MARK: - Init
     
     override func viewDidLoad() {
@@ -34,6 +34,8 @@ class DataCollectionViewController: UIViewController, AVAudioRecorderDelegate {
         configureViews()
         configureRecording()
     }
+    
+    // MARK: - Configuration
     
     private func configureViews() {
         view.backgroundColor = .white
@@ -45,9 +47,10 @@ class DataCollectionViewController: UIViewController, AVAudioRecorderDelegate {
         recordButton.anchor(top: view.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 100, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 100)
     }
     
+    // MARK: - Recording
+    
     private func configureRecording() {
         recordingSession = AVAudioSession.sharedInstance()
-        print("HERE")
         
         do {
             try recordingSession.setCategory(.playAndRecord, mode: .default)
@@ -55,15 +58,14 @@ class DataCollectionViewController: UIViewController, AVAudioRecorderDelegate {
             recordingSession.requestRecordPermission() { [unowned self] allowed in
                 DispatchQueue.main.async {
                     if allowed {
-                        print("HERE")
                         self.configureViews()
                     } else {
-                        // failed to record!
+                        self.displayAccessError()
                     }
                 }
             }
         } catch {
-            //            assert("User did not grant access to audio")
+            self.displayAccessError()
         }
     }
     
@@ -97,13 +99,11 @@ class DataCollectionViewController: UIViewController, AVAudioRecorderDelegate {
         audioRecorder.stop()
         audioRecorder = nil
         
-        if success {
-            recordButton.setTitle("Tap to Re-record", for: .normal)
-        } else {
-            recordButton.setTitle("Tap to Record", for: .normal)
-            // Recording failed
-        }
+        let title = success ? "Tap to Re-record" : "Tap to Record"
+        recordButton.setTitle(title, for: .normal)
     }
+    
+    // MARK: - Selectors
     
     @objc func recordTapped() {
         if audioRecorder == nil {
@@ -112,6 +112,26 @@ class DataCollectionViewController: UIViewController, AVAudioRecorderDelegate {
             finishRecording(success: true)
         }
     }
+    
+    // MARK: - Microphone Error Alerts
+    
+    private func displayAccessError() {
+        recordingSession = AVAudioSession.sharedInstance()
+        let alert = UIAlertController(title: "Microphone Access", message: "You have opted to not grant CSAI microphone access. We strictly use the microphone only when you choose so, and only use the data collected for Nimbus wake-word training.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Grant access", style: .default, handler: requestMicrophoneAccess))
+        alert.addAction(UIAlertAction(title: "Okay", style: .cancel, handler: nil))
+        self.present(alert, animated: true)
+    }
+    
+    private func requestMicrophoneAccess(alert: UIAlertAction!) {
+        
+    }
+    
+}
+
+// MARK: - AVAudioRecorderDelegate
+
+extension DataCollectionViewController: AVAudioRecorderDelegate {
     
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         if !flag {
