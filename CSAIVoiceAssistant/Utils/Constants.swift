@@ -14,4 +14,6 @@ struct Constants {
     
     static let BIT_DEPTH: Double = 16
     
+    static let BIT_RATE: Double = 320000
+    
 }
