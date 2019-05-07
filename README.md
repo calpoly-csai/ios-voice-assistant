@@ -1,5 +1,7 @@
 # iOS Nimbus Voice Assistant
 
+![](https://github.com/calpoly-csai/ios-voice-assistant/blob/master/Images/home_view.png)
+
 ### Current Objectives:
 - [x] Build out basic audio recording funcitonality for `Nimbus` wake-word data collection
 - [x] Add ability for user to select specific audio recording to play back
