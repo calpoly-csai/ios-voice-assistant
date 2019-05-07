@@ -13,17 +13,38 @@ class DataCollectionViewController: UIViewController {
     
     // MARK: - Properties
     
-    var recordingSession: AVAudioSession!
+    var avSession: AVAudioSession!
     var audioRecorder: AVAudioRecorder!
+    var audioPlayer: AVAudioPlayer!
+    var numberOfRecodings = 0
     
     let recordButton: UIButton = {
-        let button = UIButton()
+        let button = UIButton(type: .system)
         
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.backgroundColor = .red
-        button.setTitle("Tap to Record", for: .normal)
+        button.backgroundColor = UIColor.rgb(red: 135, green: 180, blue: 255)
+        button.setTitle("Record", for: .normal)
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .title1)
+        button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(recordTapped), for: .touchUpInside)
+        
+        button.layer.cornerRadius = 8
+        button.layer.shadowOffset = CGSize(width: 3, height: 3)
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowRadius = 4
+        
+        return button
+    }()
+    
+    let playButton: UIButton = {
+        let button = UIButton(type: .system)
+        
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.backgroundColor = UIColor.rgb(red: 135, green: 180, blue: 255)
+        button.setTitle("Play", for: .normal)
+        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .title1)
+        button.setTitleColor(.white, for: .normal)
+        button.addTarget(self, action: #selector(playTapped), for: .touchUpInside)
         
         button.layer.cornerRadius = 8
         button.layer.shadowOffset = CGSize(width: 3, height: 3)
@@ -38,8 +59,8 @@ class DataCollectionViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        configureViews()
-        configureRecording()
+        self.configureRecorderSession()
+        self.configureViews()
     }
     
     // MARK: - Configuration
@@ -49,21 +70,21 @@ class DataCollectionViewController: UIViewController {
         view.backgroundColor = .white
         
         view.addSubview(recordButton)
-        print(view.centerXAnchor)
-        recordButton.anchor(top: view.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 350, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 100)
-        view.addSubview(recordButton)
+        view.addSubview(playButton)
+        
+        recordButton.anchor(top: view.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 100, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 75)
+        playButton.anchor(top: recordButton.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 32, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 75)
     }
     
     // MARK: - Recording
     
-    private func configureRecording() {
-        recordingSession = AVAudioSession.sharedInstance()
+    private func configureRecorderSession() {
+        avSession = AVAudioSession.sharedInstance()
         
         do {
-            try recordingSession.setPreferredSampleRate(Constants.SAMPLE_RATE_HZ)
-            try recordingSession.setCategory(.playAndRecord, mode: .default)
-            try recordingSession.setActive(true)
-            recordingSession.requestRecordPermission() { [unowned self] allowed in
+            try avSession.setCategory(.playAndRecord, mode: .default, policy: .default, options: .defaultToSpeaker)
+            try avSession.setActive(true)
+            avSession.requestRecordPermission() { [unowned self] allowed in
                 DispatchQueue.main.async {
                     if allowed {
                         self.configureViews()
@@ -78,24 +99,43 @@ class DataCollectionViewController: UIViewController {
     }
     
     private func startRecording() {
-        let audioFilename = getDocumentsDirectory().appendingPathComponent("recording.m4a")
-        
+        let audioFilename = getDocumentsDirectory().appendingPathComponent("\(numberOfRecodings).m4a")
         let settings = [
-            AVSampleRateKey: Constants.SAMPLE_RATE_HZ,
-            AVLinearPCMBitDepthKey: Constants.BIT_DEPTH,
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-        ] as [String : Any]
+            AVFormatIDKey : kAudioFormatAppleLossless,
+            AVNumberOfChannelsKey: 2,
+            AVEncoderAudioQualityKey : AVAudioQuality.max.rawValue,
+            AVEncoderBitRateKey : Constants.BIT_RATE,
+            AVSampleRateKey : Constants.SAMPLE_RATE_HZ,
+            AVLinearPCMBitDepthKey : Constants.BIT_DEPTH
+            ] as [String : Any]
         
         do {
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             audioRecorder.delegate = self
+            audioRecorder.prepareToRecord()
             audioRecorder.record()
-            
-            recordButton.setTitle("Tap to Stop", for: .normal)
+            recordButton.setTitle("Stop", for: .normal)
         } catch {
-            finishRecording(success: false)
+            print("Error configuring recorder: \(error)")
+        }
+    }
+    
+    private func stopRecording() {
+        audioRecorder.stop()
+        recordButton.setTitle("Record", for: .normal)
+    }
+    
+    private func startPlaying() {
+        let audioFilename = getDocumentsDirectory().appendingPathComponent("\(numberOfRecodings).m4a")
+        
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: audioFilename)
+            audioPlayer.delegate = self
+            audioPlayer.prepareToPlay()
+            audioPlayer.volume = 1.0
+            audioPlayer.play()
+        } catch {
+            print("Error configuring player: \(error)")
         }
     }
     
@@ -104,28 +144,23 @@ class DataCollectionViewController: UIViewController {
         return paths[0]
     }
     
-    private func finishRecording(success: Bool) {
-        audioRecorder.stop()
-        audioRecorder = nil
-        
-        let title = success ? "Tap to Re-record" : "Tap to Record"
-        recordButton.setTitle(title, for: .normal)
-    }
-    
     // MARK: - Selectors
     
     @objc func recordTapped() {
-        if audioRecorder == nil {
+        if recordButton.titleLabel?.text == "Record" {
             startRecording()
         } else {
-            finishRecording(success: true)
+            stopRecording()
         }
+    }
+    
+    @objc func playTapped() {
+        startPlaying()
     }
     
     // MARK: - Microphone Error Alerts
     
     private func displayAccessError() {
-        recordingSession = AVAudioSession.sharedInstance()
         let alert = UIAlertController(title: "Microphone Access", message: "You have opted to not grant CSAI microphone access. We strictly use the microphone only when you choose so, and only use the data collected for Nimbus wake-word training.", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Grant access", style: .default, handler: requestMicrophoneAccess))
         alert.addAction(UIAlertAction(title: "Okay", style: .cancel, handler: nil))
@@ -133,19 +168,21 @@ class DataCollectionViewController: UIViewController {
     }
     
     private func requestMicrophoneAccess(alert: UIAlertAction!) {
-        
+        // TODO: - Implement requestMicrophoneAccess
     }
     
 }
 
 // MARK: - AVAudioRecorderDelegate
 
-extension DataCollectionViewController: AVAudioRecorderDelegate {
+extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
-        if !flag {
-            finishRecording(success: false)
-        }
+        print("Recorder finished recording")
+    }
+    
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        print("Player finished playing")
     }
     
 }

@@ -485,7 +485,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AR3N56YAR6;
+				DEVELOPMENT_TEAM = 7C6T4SXM4J;
 				INFOPLIST_FILE = "$(SRCROOT)/CSAIVoiceAssistant/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -503,7 +503,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AR3N56YAR6;
+				DEVELOPMENT_TEAM = 7C6T4SXM4J;
 				INFOPLIST_FILE = "$(SRCROOT)/CSAIVoiceAssistant/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
