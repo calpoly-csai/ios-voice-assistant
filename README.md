@@ -8,4 +8,4 @@
 ### Miscellaneous
 It should be noted that this project is in a very crude state and does not properly conform to the MVC ideology. This will be addressed in further iterations.
 
-![](https://github.com/calpoly-csai/ios-voice-assistant/blob/master/Images/home_view.png)
+![](https://github.com/calpoly-csai/ios-voice-assistant/blob/master/Images/home_image.png)
