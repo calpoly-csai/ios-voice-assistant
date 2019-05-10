@@ -13,18 +13,18 @@ class DataCollectionViewController: UIViewController {
     
     // MARK: - Properties
     
-    let cellReuseID = "cellReuseID"
-    var avSession: AVAudioSession!
-    var audioRecorder: AVAudioRecorder!
-    var audioPlayer: AVAudioPlayer!
-    var audioFilename: URL!
-    var recordings = [URL]() {
+    fileprivate let cellReuseID = "cellReuseID"
+    fileprivate var avSession: AVAudioSession!
+    fileprivate var audioRecorder: AVAudioRecorder!
+    fileprivate var audioPlayer: AVAudioPlayer!
+    fileprivate var audioFilename: URL!
+    fileprivate var recordings = [URL]() {
         didSet {
             numberOfRecordingsLabel.text = "Number of recordings: \(recordings.count)"
         }
     }
     
-    let resetButton: UIButton = {
+    private let resetButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = UIColor.rgb(red: 135, green: 180, blue: 255)
@@ -39,7 +39,7 @@ class DataCollectionViewController: UIViewController {
         return button
     }()
     
-    let recordButton: UIButton = {
+    private let recordButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.showsTouchWhenHighlighted = true
@@ -51,7 +51,7 @@ class DataCollectionViewController: UIViewController {
         return button
     }()
     
-    let playButton: UIButton = {
+    private let playButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.backgroundColor = UIColor.rgb(red: 135, green: 180, blue: 255)
@@ -66,7 +66,7 @@ class DataCollectionViewController: UIViewController {
         return button
     }()
     
-    let numberOfRecordingsLabel: UILabel = {
+    private let numberOfRecordingsLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
         label.text = "Number of recordings: 0"
@@ -74,7 +74,7 @@ class DataCollectionViewController: UIViewController {
         return label
     }()
     
-    let userInputRecordingTextField: UITextField = {
+    private let userInputRecordingTextField: UITextField = {
         let placeholderColor = UIColor.rgba(red: 255, green: 255, blue: 255, alpha: 0.6)
         let field = UITextField()
         field.backgroundColor = UIColor.rgb(red: 135, green: 180, blue: 255)
@@ -87,7 +87,7 @@ class DataCollectionViewController: UIViewController {
         return field
     }()
     
-    let tableView: UITableView = {
+    private let tableView: UITableView = {
         let table = UITableView()
         table.layer.borderColor = UIColor.black.cgColor
         table.layer.borderWidth = 1
@@ -125,7 +125,6 @@ class DataCollectionViewController: UIViewController {
         resetButton.anchor(top: userInputRecordingTextField.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 40)
         
         configureRecordButton()
-        
         configureTableView()
     }
     
@@ -180,7 +179,6 @@ class DataCollectionViewController: UIViewController {
     // MARK: - Selectors
     
     @objc func recordTapped() {
-//        recordButton.backgroundColor = .blue
         if audioRecorder == nil {
             startRecording()
         } else {
@@ -222,7 +220,7 @@ class DataCollectionViewController: UIViewController {
     
 }
 
-// MARK: - AVAudioRecorderDelegate
+// MARK: - AVAudioRecorder
 
 extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDelegate {
     
@@ -298,22 +296,7 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
         }
     }
     
-    
-    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
-        playButton.setTitle("Play", for: .normal)
-        audioRecorder = nil
-        recordings.append(audioFilename)
-        tableView.reloadData()
-        
-        storeRecordings()
-        print("Recorder finished recording")
-    }
-    
-    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        print("Player finished playing")
-    }
-    
-    func fetchRecordingsFromStored() {
+    fileprivate func fetchRecordingsFromStored() {
         recordings.removeAll()
         if let storedRecordings = UserDefaults.standard.object(forKey: "recordings") as? [String] {
             for recording in storedRecordings {
@@ -337,6 +320,20 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
         recordings.removeAll()
         tableView.reloadData()
         print("Reset local recordings")
+    }
+    
+    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+        playButton.setTitle("Play", for: .normal)
+        audioRecorder = nil
+        recordings.append(audioFilename)
+        tableView.reloadData()
+        
+        storeRecordings()
+        print("Recorder finished recording")
+    }
+    
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        print("Player finished playing")
     }
     
 }
