@@ -42,12 +42,11 @@ class DataCollectionViewController: UIViewController {
     let recordButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.backgroundColor = UIColor.rgb(red: 135, green: 180, blue: 255)
+        button.showsTouchWhenHighlighted = true
+        button.backgroundColor = .red
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .title1)
         button.setTitleColor(.white, for: .normal)
         button.addTarget(self, action: #selector(recordTapped), for: .touchUpInside)
-        
-        button.layer.cornerRadius = 8
         
         return button
     }()
@@ -101,6 +100,7 @@ class DataCollectionViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        fetchRecordingsFromStored()
         configureViews()
         configureRecorderSession()
     }
@@ -108,7 +108,6 @@ class DataCollectionViewController: UIViewController {
     // MARK: - Configuration
     
     private func configureViews() {
-        fetchRecordingsFromStored()
         configureGeneralView()
         
         view.addSubview(resetButton)
@@ -116,18 +115,42 @@ class DataCollectionViewController: UIViewController {
         view.addSubview(numberOfRecordingsLabel)
         view.addSubview(userInputRecordingTextField)
         view.addSubview(playButton)
-        configureTableView()
         
-        updateRecordButtonTitle()
-        resetButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 40)
+        playButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 8, paddingBottom: 0, paddingRight: 16, width: 0, height: 75)
         
-        recordButton.anchor(top: resetButton.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.centerXAnchor, paddingTop: 16, paddingLeft: 16, paddingBottom: 0, paddingRight: 8, width: 0, height: 75)
-        
-        numberOfRecordingsLabel.anchor(top: recordButton.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 30)
+        numberOfRecordingsLabel.anchor(top: playButton.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 30)
         
         userInputRecordingTextField.anchor(top: numberOfRecordingsLabel.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 30)
         
-        playButton.anchor(top: recordButton.topAnchor, leading: recordButton.trailingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 0, paddingLeft: 8, paddingBottom: 0, paddingRight: 16, width: 0, height: 75)
+        resetButton.anchor(top: userInputRecordingTextField.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 40)
+        
+        configureRecordButton()
+        
+        configureTableView()
+    }
+    
+    private func configureGeneralView() {
+        navigationItem.title = "Nimbus Data Collection"
+        view.backgroundColor = .white
+    }
+    
+    private func configureRecordButton() {
+        recordButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        recordButton.anchor(top: nil, leading: nil, bottom: view.bottomAnchor, trailing: nil, paddingTop: 0, paddingLeft: 0, paddingBottom: 16, paddingRight: 0, width: 60, height: 60)
+        recordButton.layer.cornerRadius = 30
+        
+        // Poor way to do this, but avoid rendering the layer until after the button has been fully rendered
+        if (recordButton.frame.origin.x > 0) {
+            let circlePath = UIBezierPath(arcCenter: CGPoint(x: recordButton.frame.origin.x + 30, y: recordButton.frame.origin.y + 30), radius: CGFloat(35), startAngle: CGFloat(0), endAngle:CGFloat(Double.pi * 2), clockwise: true)
+
+            let shapeLayer = CAShapeLayer()
+            shapeLayer.path = circlePath.cgPath
+            shapeLayer.fillColor = UIColor.clear.cgColor
+            shapeLayer.strokeColor = UIColor.black.cgColor
+            shapeLayer.lineWidth = 3.0
+
+            view.layer.addSublayer(shapeLayer)
+        }
     }
     
     private func configureTableView() {
@@ -137,12 +160,7 @@ class DataCollectionViewController: UIViewController {
         
         view.addSubview(tableView)
         
-        tableView.anchor(top: userInputRecordingTextField.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 8, paddingBottom: 0, paddingRight: 8, width: 0, height: 200)
-    }
-    
-    private func configureGeneralView() {
-        navigationItem.title = "Nimbus Data Collection"
-        view.backgroundColor = .white
+        tableView.anchor(top: resetButton.bottomAnchor, leading: view.leadingAnchor, bottom: recordButton.topAnchor, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 8, paddingBottom: 16, paddingRight: 8, width: 0, height: 0)
     }
     
     private func updateRecordButtonTitle() {
@@ -162,6 +180,7 @@ class DataCollectionViewController: UIViewController {
     // MARK: - Selectors
     
     @objc func recordTapped() {
+//        recordButton.backgroundColor = .blue
         if audioRecorder == nil {
             startRecording()
         } else {
@@ -175,7 +194,10 @@ class DataCollectionViewController: UIViewController {
     }
     
     @objc func resetRecordings() {
-        resetLocalRecordings()
+        let alert = UIAlertController(title: "Reset local recordings?", message: "Resetting will overwrite any recordings you have already recorded.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Reset", style: .default, handler: resetLocalRecordings))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        present(alert, animated: true)
     }
     
     // MARK: - Microphone Error Alerts
@@ -225,20 +247,21 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
     }
     
     fileprivate func startRecording() {
-        audioFilename = getDocumentsDirectory().appendingPathComponent("\(recordings.count).m4a")
-        let settings = [
-            AVFormatIDKey : kAudioFormatAppleLossless,
-            AVNumberOfChannelsKey: 2,
-            AVEncoderAudioQualityKey : AVAudioQuality.max.rawValue,
-            AVEncoderBitRateKey : Constants.BIT_RATE,
+        audioFilename = getDocumentsDirectory().appendingPathComponent("\(recordings.count).wav")
+        let settings: [String : Any] = [
+            AVFormatIDKey : Int(kAudioFormatLinearPCM),
             AVSampleRateKey : Constants.SAMPLE_RATE_HZ,
-            AVLinearPCMBitDepthKey : Constants.BIT_DEPTH
-            ] as [String : Any]
+            AVLinearPCMBitDepthKey : Constants.BIT_DEPTH,
+            AVNumberOfChannelsKey : 1,
+            AVEncoderAudioQualityKey : AVAudioQuality.max.rawValue,
+            AVEncoderBitRateKey : Constants.BIT_RATE
+        ]
         
         do {
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             audioRecorder.delegate = self
-            updateRecordButtonTitle()
+            
+            playButton.setTitle("Recording", for: .normal)
             audioRecorder.record(forDuration: 2.5)
             
         } catch {
@@ -263,7 +286,6 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
                 audioFilename = URL(string: file)
             }
         }
-        print(audioFilename)
         
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: audioFilename)
@@ -278,8 +300,8 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
     
     
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+        playButton.setTitle("Play", for: .normal)
         audioRecorder = nil
-        updateRecordButtonTitle()
         recordings.append(audioFilename)
         tableView.reloadData()
         
@@ -310,7 +332,7 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
         UserDefaults.standard.set(recordingsAsStrings, forKey: "recordings")
     }
     
-    func resetLocalRecordings() {
+    func resetLocalRecordings(alert: UIAlertAction!) {
         UserDefaults.standard.set(nil, forKey: "recordings")
         recordings.removeAll()
         tableView.reloadData()
