@@ -117,11 +117,8 @@ class DataCollectionViewController: UIViewController {
         view.addSubview(playButton)
         
         playButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 8, paddingBottom: 0, paddingRight: 16, width: 0, height: 75)
-        
         numberOfRecordingsLabel.anchor(top: playButton.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 30)
-        
         userInputRecordingTextField.anchor(top: numberOfRecordingsLabel.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 30)
-        
         resetButton.anchor(top: userInputRecordingTextField.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 40)
         
         configureRecordButton()
