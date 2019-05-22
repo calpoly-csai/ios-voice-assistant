@@ -12,7 +12,7 @@ class RecordingCell: UITableViewCell {
     
     let recordingNameLabel: UILabel = {
         let label = UILabel()
-        label.text = "Hey ho, let's go"
+        label.numberOfLines = 0
         
         return label
     }()
@@ -21,7 +21,7 @@ class RecordingCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         contentView.addSubview(recordingNameLabel)
-        recordingNameLabel.anchor(top: contentView.topAnchor, leading: contentView.leadingAnchor, bottom: contentView.bottomAnchor, trailing: contentView.trailingAnchor, paddingTop: 0, paddingLeft: 16, paddingBottom: 0, paddingRight: 0, width: 0, height: 0)
+        recordingNameLabel.anchor(top: contentView.topAnchor, leading: contentView.leadingAnchor, bottom: contentView.bottomAnchor, trailing: contentView.trailingAnchor, paddingTop: 0, paddingLeft: 16, paddingBottom: 0, paddingRight: 8, width: 0, height: 0)
     }
     
     required init?(coder aDecoder: NSCoder) {
