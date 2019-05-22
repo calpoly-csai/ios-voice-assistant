@@ -17,12 +17,14 @@ class DataCollectionViewController: UIViewController {
     fileprivate var avSession: AVAudioSession!
     fileprivate var audioRecorder: AVAudioRecorder!
     fileprivate var audioPlayer: AVAudioPlayer!
-    fileprivate var audioFilename: URL!
-    fileprivate var recordings = [URL]() {
+    var recordings = [URL]() {
         didSet {
             numberOfRecordingsLabel.text = "Number of recordings: \(recordings.count)"
+            tableView.reloadData()
         }
     }
+    var audioFilename: URL!
+    var recording: Recording?
     
     private let resetButton: UIButton = {
         let button = UIButton(type: .system)
@@ -35,6 +37,7 @@ class DataCollectionViewController: UIViewController {
         button.layer.cornerRadius = 8
         button.layer.shadowOffset = CGSize(width: 3, height: 3)
         button.addTarget(self, action: #selector(resetRecordings), for: .touchUpInside)
+        button.dropShadow()
         
         return button
     }()
@@ -62,6 +65,7 @@ class DataCollectionViewController: UIViewController {
         
         button.layer.cornerRadius = 8
         button.layer.shadowOffset = CGSize(width: 3, height: 3)
+        button.dropShadow()
         
         return button
     }()
@@ -83,11 +87,12 @@ class DataCollectionViewController: UIViewController {
         field.attributedPlaceholder = NSAttributedString(string: "Enter recording number to play", attributes: [NSAttributedString.Key.foregroundColor: placeholderColor])
         
         field.layer.cornerRadius = 8
+        field.dropShadow()
         
         return field
     }()
     
-    private let tableView: UITableView = {
+    let tableView: UITableView = {
         let table = UITableView()
         table.layer.borderColor = UIColor.black.cgColor
         table.layer.borderWidth = 1
@@ -116,7 +121,7 @@ class DataCollectionViewController: UIViewController {
         view.addSubview(userInputRecordingTextField)
         view.addSubview(playButton)
         
-        playButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 8, paddingBottom: 0, paddingRight: 16, width: 0, height: 75)
+        playButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 16, paddingBottom: 0, paddingRight: 16, width: 0, height: 75)
         numberOfRecordingsLabel.anchor(top: playButton.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 30)
         userInputRecordingTextField.anchor(top: numberOfRecordingsLabel.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 30)
         resetButton.anchor(top: userInputRecordingTextField.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 40)
@@ -138,13 +143,13 @@ class DataCollectionViewController: UIViewController {
         // Poor way to do this, but avoid rendering the layer until after the button has been fully rendered
         if (recordButton.frame.origin.x > 0) {
             let circlePath = UIBezierPath(arcCenter: CGPoint(x: recordButton.frame.origin.x + 30, y: recordButton.frame.origin.y + 30), radius: CGFloat(35), startAngle: CGFloat(0), endAngle:CGFloat(Double.pi * 2), clockwise: true)
-
+            
             let shapeLayer = CAShapeLayer()
             shapeLayer.path = circlePath.cgPath
             shapeLayer.fillColor = UIColor.clear.cgColor
             shapeLayer.strokeColor = UIColor.black.cgColor
             shapeLayer.lineWidth = 3.0
-
+            
             view.layer.addSublayer(shapeLayer)
         }
     }
@@ -190,7 +195,7 @@ class DataCollectionViewController: UIViewController {
     
     @objc func resetRecordings() {
         let alert = UIAlertController(title: "Reset local recordings?", message: "Resetting will overwrite any recordings you have already recorded.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Reset", style: .default, handler: resetLocalRecordings))
+        alert.addAction(UIAlertAction(title: "Reset", style: .destructive, handler: resetLocalRecordings))
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         present(alert, animated: true)
     }
@@ -210,7 +215,7 @@ class DataCollectionViewController: UIViewController {
         // TODO: - Implement requestMicrophoneAccess
     }
     
-    private func getDocumentsDirectory() -> URL {
+    func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
     }
@@ -241,8 +246,10 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
         }
     }
     
-    fileprivate func startRecording() {
-        audioFilename = getDocumentsDirectory().appendingPathComponent("\(recordings.count).wav")
+    func startRecording() {
+        recording = Recording()
+        self.audioFilename = self.getDocumentsDirectory().appendingPathComponent("\(String(self.recordings.count))")
+        
         let settings: [String : Any] = [
             AVFormatIDKey : Int(kAudioFormatLinearPCM),
             AVSampleRateKey : Constants.SAMPLE_RATE_HZ,
@@ -301,10 +308,9 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
                 recordings.append(urlRecording!)
             }
         }
-        tableView.reloadData()
     }
     
-    private func storeRecordings() {
+    func storeRecordings() {
         var recordingsAsStrings = [String]()
         for recording in recordings {
             recordingsAsStrings.append(recording.absoluteString)
@@ -315,7 +321,6 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
     func resetLocalRecordings(alert: UIAlertAction!) {
         UserDefaults.standard.set(nil, forKey: "recordings")
         recordings.removeAll()
-        tableView.reloadData()
         print("Reset local recordings")
     }
     
@@ -323,10 +328,10 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
         playButton.setTitle("Play", for: .normal)
         audioRecorder = nil
         recordings.append(audioFilename)
-        tableView.reloadData()
         
-        storeRecordings()
         print("Recorder finished recording")
+        
+        getAudioRecordingName()
     }
     
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
@@ -343,7 +348,11 @@ extension DataCollectionViewController: UITableViewDataSource, UITableViewDelega
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: cellReuseID, for: indexPath) as! RecordingCell
-        cell.recordingNameLabel.text = recordings[indexPath.row].absoluteString
+        var name = recordings[indexPath.row].absoluteString
+        
+        let pathLength = name.count - getPreappendingPath().absoluteString.count
+        name = String(name.suffix(pathLength))
+        cell.recordingNameLabel.text = name
         return cell
     }
     

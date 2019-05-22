@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		601811DE22905E6800FB5093 /* Recording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601811DD22905E6800FB5093 /* Recording.swift */; };
+		601811E02290683400FB5093 /* DataCollectionViewController+Alerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601811DF2290683400FB5093 /* DataCollectionViewController+Alerts.swift */; };
 		605ADDD3228275FD004145D8 /* RecordingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 605ADDD2228275FD004145D8 /* RecordingCell.swift */; };
 		60A36FC22280B9EE007A7C3A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60A36FC12280B9EE007A7C3A /* AppDelegate.swift */; };
 		60A36FC92280B9F0007A7C3A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 60A36FC82280B9F0007A7C3A /* Assets.xcassets */; };
@@ -36,6 +38,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		601811DD22905E6800FB5093 /* Recording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recording.swift; sourceTree = "<group>"; };
+		601811DF2290683400FB5093 /* DataCollectionViewController+Alerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DataCollectionViewController+Alerts.swift"; sourceTree = "<group>"; };
 		605ADDD2228275FD004145D8 /* RecordingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingCell.swift; sourceTree = "<group>"; };
 		60A36FBE2280B9EE007A7C3A /* CSAIVoiceAssistant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CSAIVoiceAssistant.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		60A36FC12280B9EE007A7C3A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -132,6 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				60A36FEF2280BA53007A7C3A /* DataCollectionViewController.swift */,
+				601811DF2290683400FB5093 /* DataCollectionViewController+Alerts.swift */,
 				60A370152280DA6F007A7C3A /* TabBarController.swift */,
 			);
 			path = Controllers;
@@ -140,7 +145,7 @@
 		60A36FF22280BA68007A7C3A /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				605ADDD2228275FD004145D8 /* RecordingCell.swift */,
+				601811DD22905E6800FB5093 /* Recording.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -148,6 +153,7 @@
 		60A36FF32280BA70007A7C3A /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				605ADDD2228275FD004145D8 /* RecordingCell.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -305,7 +311,9 @@
 				60A36FC22280B9EE007A7C3A /* AppDelegate.swift in Sources */,
 				60A370112280BFE0007A7C3A /* Extensions.swift in Sources */,
 				60A370162280DA6F007A7C3A /* TabBarController.swift in Sources */,
+				601811DE22905E6800FB5093 /* Recording.swift in Sources */,
 				60A370142280CFFD007A7C3A /* Constants.swift in Sources */,
+				601811E02290683400FB5093 /* DataCollectionViewController+Alerts.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -392,7 +400,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -447,7 +455,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
