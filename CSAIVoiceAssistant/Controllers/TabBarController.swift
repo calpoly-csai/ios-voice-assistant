@@ -18,9 +18,16 @@ class TabBarController: UITabBarController {
     private func configureTabBar() {
         tabBar.isTranslucent = false
         
-        let dataCollectionViewController = UINavigationController(rootViewController: DataCollectionViewController())
+        let dcVC = DataCollectionViewController()
+        let dataCollectionViewController = UINavigationController(rootViewController: dcVC)
+        dataCollectionViewController.tabBarItem.image = UIImage(named: "mic")
+        let dataVC = DataViewController()
+        dataVC.dataCollectionDelegate = dcVC
+        dcVC.dataDelegate = dataVC
+        let dataViewController = UINavigationController(rootViewController: dataVC)
+        dataViewController.tabBarItem.image = UIImage(named: "database")
         
-        viewControllers = [dataCollectionViewController]
+        viewControllers = [dataCollectionViewController, dataViewController]
         
         // Center tab bar items without titles
         if let tabBarItems = tabBar.items {

@@ -6,10 +6,12 @@
 //  Copyright © 2019 Cal Poly CSAI. All rights reserved.
 //
 
+// TODO: - Refactor this entire app lol
+
 import UIKit
 import AVFoundation
 
-class DataCollectionViewController: UIViewController {
+class DataCollectionViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
     
     // MARK: - Properties
     
@@ -17,29 +19,77 @@ class DataCollectionViewController: UIViewController {
     fileprivate var avSession: AVAudioSession!
     fileprivate var audioRecorder: AVAudioRecorder!
     fileprivate var audioPlayer: AVAudioPlayer!
-    var recordings = [URL]() {
-        didSet {
-            numberOfRecordingsLabel.text = "Number of recordings: \(recordings.count)"
-            tableView.reloadData()
-        }
-    }
+    fileprivate let genders: [Gender] = [.male, .female]
+    fileprivate let noiseLevels: [NoiseLevel] = [.quiet, .moderate, .loud]
+    fileprivate var recordingsLength = 0
+    var dataDelegate: DataViewController?
     var audioFilename: URL!
     var recording: Recording?
+    var recordings = [URL]() {
+        didSet {
+            if recordingsLength <= recordings.count {
+                dataDelegate?.tableView.reloadData()
+            }
+            recordingsLength = recordings.count
+        }
+    }
     
-    private let resetButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.backgroundColor = UIColor.rgb(red: 135, green: 180, blue: 255)
-        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .title1)
-        button.setTitleColor(.white, for: .normal)
-        button.setTitle("Reset local recordings", for: .normal)
+    private let speakerFirstNameInputField: UITextField = {
+        let placeholderColor = UIColor.rgba(red: 10, green: 10, blue: 10, alpha: 0.6)
+        let field = UITextField()
+        field.textAlignment = .left
+        field.textColor = .black
+        field.attributedPlaceholder = NSAttributedString(string: "Speaker's First Name", attributes: [NSAttributedString.Key.foregroundColor: placeholderColor])
         
-        button.layer.cornerRadius = 8
-        button.layer.shadowOffset = CGSize(width: 3, height: 3)
-        button.addTarget(self, action: #selector(resetRecordings), for: .touchUpInside)
-        button.dropShadow()
+        field.layer.cornerRadius = 8
+        return field
+    }()
+    
+    private let speakerLastNameInputField: UITextField = {
+        let placeholderColor = UIColor.rgba(red: 10, green: 10, blue: 10, alpha: 0.6)
+        let field = UITextField()
+        field.textAlignment = .left
+        field.textColor = .black
+        field.attributedPlaceholder = NSAttributedString(string: "Speaker's Last Name", attributes: [NSAttributedString.Key.foregroundColor: placeholderColor])
         
-        return button
+        field.layer.cornerRadius = 8
+        return field
+    }()
+    
+    private let speakerDescriptionInputField: UITextField = {
+        let placeholderColor = UIColor.rgba(red: 10, green: 10, blue: 10, alpha: 0.6)
+        let field = UITextField()
+        field.textAlignment = .left
+        field.textColor = .black
+        field.attributedPlaceholder = NSAttributedString(string: "Description", attributes: [NSAttributedString.Key.foregroundColor: placeholderColor])
+        
+        field.layer.cornerRadius = 8
+        return field
+    }()
+    
+    private let speakerLocationInputField: UITextField = {
+        let placeholderColor = UIColor.rgba(red: 10, green: 10, blue: 10, alpha: 0.6)
+        let field = UITextField()
+        field.textAlignment = .left
+        field.textColor = .black
+        field.attributedPlaceholder = NSAttributedString(string: "Location (for accent)", attributes: [NSAttributedString.Key.foregroundColor: placeholderColor])
+        
+        field.layer.cornerRadius = 8
+        return field
+    }()
+    
+    private let genderPicker: UIPickerView = {
+        let picker = UIPickerView()
+        picker.tag = 0
+        
+        return picker
+    }()
+    
+    private let noiseLevelPicker: UIPickerView = {
+        let picker = UIPickerView()
+        picker.tag = 1
+        
+        return picker
     }()
     
     private let recordButton: UIButton = {
@@ -54,52 +104,6 @@ class DataCollectionViewController: UIViewController {
         return button
     }()
     
-    private let playButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.backgroundColor = UIColor.rgb(red: 135, green: 180, blue: 255)
-        button.setTitle("Play", for: .normal)
-        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .title1)
-        button.setTitleColor(.white, for: .normal)
-        button.addTarget(self, action: #selector(playTapped), for: .touchUpInside)
-        
-        button.layer.cornerRadius = 8
-        button.layer.shadowOffset = CGSize(width: 3, height: 3)
-        button.dropShadow()
-        
-        return button
-    }()
-    
-    private let numberOfRecordingsLabel: UILabel = {
-        let label = UILabel()
-        label.textAlignment = .center
-        label.text = "Number of recordings: 0"
-        
-        return label
-    }()
-    
-    private let userInputRecordingTextField: UITextField = {
-        let placeholderColor = UIColor.rgba(red: 255, green: 255, blue: 255, alpha: 0.6)
-        let field = UITextField()
-        field.backgroundColor = UIColor.rgb(red: 135, green: 180, blue: 255)
-        field.textAlignment = .center
-        field.textColor = .white
-        field.attributedPlaceholder = NSAttributedString(string: "Enter recording number to play", attributes: [NSAttributedString.Key.foregroundColor: placeholderColor])
-        
-        field.layer.cornerRadius = 8
-        field.dropShadow()
-        
-        return field
-    }()
-    
-    let tableView: UITableView = {
-        let table = UITableView()
-        table.layer.borderColor = UIColor.black.cgColor
-        table.layer.borderWidth = 1
-        
-        return table;
-    }()
-    
     // MARK: - Init
     
     override func viewDidLoad() {
@@ -112,32 +116,54 @@ class DataCollectionViewController: UIViewController {
     
     // MARK: - Configuration
     
+    // TODO: - Encapsulate all the anchoring
     private func configureViews() {
         configureGeneralView()
         
-        view.addSubview(resetButton)
         view.addSubview(recordButton)
-        view.addSubview(numberOfRecordingsLabel)
-        view.addSubview(userInputRecordingTextField)
-        view.addSubview(playButton)
+        view.addSubview(speakerFirstNameInputField)
+        view.addSubview(speakerLastNameInputField)
+        view.addSubview(speakerDescriptionInputField)
+        view.addSubview(speakerLocationInputField)
+        view.addSubview(genderPicker)
+        view.addSubview(noiseLevelPicker)
         
-        playButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 16, paddingBottom: 0, paddingRight: 16, width: 0, height: 75)
-        numberOfRecordingsLabel.anchor(top: playButton.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 30)
-        userInputRecordingTextField.anchor(top: numberOfRecordingsLabel.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 30)
-        resetButton.anchor(top: userInputRecordingTextField.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 32, paddingBottom: 0, paddingRight: 32, width: 0, height: 40)
+        speakerFirstNameInputField.anchor(top: view.safeAreaLayoutGuide.topAnchor, leading: nil, bottom: nil, trailing: nil, paddingTop: 20, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 300, height: 30)
+        speakerFirstNameInputField.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        speakerFirstNameInputField.underlined()
+        
+        speakerLastNameInputField.anchor(top: speakerFirstNameInputField.bottomAnchor, leading: nil, bottom: nil, trailing: nil, paddingTop: 20, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 300, height: 30)
+        speakerLastNameInputField.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        speakerLastNameInputField.underlined()
+        
+        speakerDescriptionInputField.anchor(top: speakerLastNameInputField.bottomAnchor, leading: nil, bottom: nil, trailing: nil, paddingTop: 20, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 300, height: 30)
+        speakerDescriptionInputField.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        speakerDescriptionInputField.underlined()
+        
+        speakerLocationInputField.anchor(top: speakerDescriptionInputField.bottomAnchor, leading: nil, bottom: nil, trailing: nil, paddingTop: 20, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 300, height: 30)
+        speakerLocationInputField.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        speakerLocationInputField.underlined()
+        
+        genderPicker.anchor(top: speakerLocationInputField.bottomAnchor, leading: view.leadingAnchor, bottom: nil, trailing: nil, paddingTop: 0, paddingLeft: 22, paddingBottom: 0, paddingRight: 0, width: 150, height: 150)
+        genderPicker.dataSource = self
+        genderPicker.delegate = self
+        
+        noiseLevelPicker.anchor(top: speakerLocationInputField.bottomAnchor, leading: nil, bottom: nil, trailing: view.trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 22, width: 150, height: 150)
+        noiseLevelPicker.dataSource = self
+        noiseLevelPicker.delegate = self
         
         configureRecordButton()
-        configureTableView()
     }
     
     private func configureGeneralView() {
-        navigationItem.title = "Nimbus Data Collection"
+        navigationItem.title = "Data Collection"
+        navigationController?.navigationBar.prefersLargeTitles = true
         view.backgroundColor = .white
     }
     
     private func configureRecordButton() {
         recordButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        recordButton.anchor(top: nil, leading: nil, bottom: view.bottomAnchor, trailing: nil, paddingTop: 0, paddingLeft: 0, paddingBottom: 16, paddingRight: 0, width: 60, height: 60)
+        recordButton.anchor(top: nil, leading: nil, bottom: view.bottomAnchor, trailing: nil, paddingTop: 0, paddingLeft: 0, paddingBottom: 32, paddingRight: 0, width: 60, height: 60)
         recordButton.layer.cornerRadius = 30
         
         // Poor way to do this, but avoid rendering the layer until after the button has been fully rendered
@@ -152,16 +178,6 @@ class DataCollectionViewController: UIViewController {
             
             view.layer.addSublayer(shapeLayer)
         }
-    }
-    
-    private func configureTableView() {
-        tableView.dataSource = self
-        tableView.delegate = self
-        tableView.register(RecordingCell.self, forCellReuseIdentifier: cellReuseID)
-        
-        view.addSubview(tableView)
-        
-        tableView.anchor(top: resetButton.bottomAnchor, leading: view.leadingAnchor, bottom: recordButton.topAnchor, trailing: view.trailingAnchor, paddingTop: 16, paddingLeft: 8, paddingBottom: 16, paddingRight: 8, width: 0, height: 0)
     }
     
     private func updateRecordButtonTitle() {
@@ -181,16 +197,17 @@ class DataCollectionViewController: UIViewController {
     // MARK: - Selectors
     
     @objc func recordTapped() {
+        UIView.animate(withDuration: 2.5, delay: 0.0, options: [.autoreverse], animations: {
+            self.recordButton.backgroundColor = UIColor.rgb(red: 126, green: 0, blue: 0)
+        }) { (success) in
+            self.recordButton.backgroundColor = .red
+        }
         if audioRecorder == nil {
             startRecording()
         } else {
             // Uncomment this to allow the user to record for less than 2.5 seconds
             // stopRecording()
         }
-    }
-    
-    @objc func playTapped() {
-        startPlaying()
     }
     
     @objc func resetRecordings() {
@@ -218,6 +235,29 @@ class DataCollectionViewController: UIViewController {
     func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
+    }
+    
+    // Number of columns of data
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    // The number of rows of data
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        switch pickerView.tag {
+        case 0: return genders.count
+        case 1: return noiseLevels.count
+        default: return 0
+        }
+    }
+    
+    // The data to return fopr the row and component (column) that's being passed in
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        switch pickerView.tag {
+        case 0: return genders[row].rawValue.firstCapitalized
+        case 1: return noiseLevels[row].rawValue.firstCapitalized
+        default: return nil
+        }
     }
     
 }
@@ -263,7 +303,6 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             audioRecorder.delegate = self
             
-            playButton.setTitle("Recording", for: .normal)
             audioRecorder.record(forDuration: 2.5)
             
         } catch {
@@ -275,29 +314,6 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
     fileprivate func stopRecording() {
         audioRecorder.stop()
         audioRecorder = nil
-    }
-    
-    fileprivate func startPlaying() {
-        if recordings.count == 0 {
-            return
-        }
-        
-        audioFilename = recordings[recordings.count - 1]
-        if userInputRecordingTextField.text?.count ?? 0 > 0 {
-            if let file = userInputRecordingTextField.text {
-                audioFilename = URL(string: file)
-            }
-        }
-        
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: audioFilename)
-            audioPlayer.delegate = self
-            audioPlayer.prepareToPlay()
-            audioPlayer.volume = 1.0
-            audioPlayer.play()
-        } catch {
-            print("Error configuring player: \(error)")
-        }
     }
     
     fileprivate func fetchRecordingsFromStored() {
@@ -325,7 +341,6 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
     }
     
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
-        playButton.setTitle("Play", for: .normal)
         audioRecorder = nil
         recordings.append(audioFilename)
         
@@ -338,31 +353,14 @@ extension DataCollectionViewController: AVAudioRecorderDelegate, AVAudioPlayerDe
         print("Player finished playing")
     }
     
-}
-
-extension DataCollectionViewController: UITableViewDataSource, UITableViewDelegate {
-    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return recordings.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: cellReuseID, for: indexPath) as! RecordingCell
-        var name = recordings[indexPath.row].absoluteString
-        
-        let pathLength = name.count - getPreappendingPath().absoluteString.count
-        name = String(name.suffix(pathLength))
-        cell.recordingNameLabel.text = name
-        return cell
-    }
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 50
-    }
-    
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        userInputRecordingTextField.text = recordings[indexPath.row].absoluteString
-        tableView.deselectRow(at: indexPath, animated: true)
+    func getAudioRecordingName() {
+        recording?.firstName = speakerFirstNameInputField.text
+        recording?.lastName = speakerLastNameInputField.text
+        recording?.speakerGender = genders[genderPicker.selectedRow(inComponent: 0)]
+        recording?.noiseLevel = noiseLevels[noiseLevelPicker.selectedRow(inComponent: 0)]
+        recording?.description = speakerDescriptionInputField.text
+        recording?.location = speakerLocationInputField.text
+        renameFile()
     }
     
 }
