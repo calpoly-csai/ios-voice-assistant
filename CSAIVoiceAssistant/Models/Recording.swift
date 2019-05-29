@@ -8,13 +8,13 @@
 
 import Foundation
 
-enum Gender {
+enum Gender: String {
     case male
     case female
     case unassigned
 }
 
-enum NoiseLevel {
+enum NoiseLevel: String {
     case quiet
     case moderate
     case loud

@@ -35,9 +35,9 @@ extension UIView {
     
     func dropShadow() {
         self.layer.shadowColor = UIColor.gray.cgColor
-        self.layer.shadowOpacity = 0.6
+        self.layer.shadowOpacity = 0.5
         self.layer.shadowOffset = CGSize(width: 1, height: 1)
-        self.layer.shadowRadius = 6
+        self.layer.shadowRadius = 3
     }
     
 }
@@ -50,5 +50,25 @@ extension UIColor {
     
     static func rgb(red: CGFloat, green: CGFloat, blue: CGFloat) -> UIColor {
         return UIColor(red: red / 255, green: green / 255, blue: blue / 255, alpha: 1)
+    }
+}
+
+extension UITextField {
+    
+    func underlined() {
+        let bottomBorder = CALayer()
+        bottomBorder.frame = CGRect(x: 0.0, y: frame.size.height, width: frame.size.width, height: 1);
+        bottomBorder.backgroundColor = UIColor.lightGray.cgColor
+        layer.insertSublayer(bottomBorder, at: 0)
+    }
+    
+}
+
+extension StringProtocol {
+    var firstUppercased: String {
+        return prefix(1).uppercased()  + dropFirst()
+    }
+    var firstCapitalized: String {
+        return prefix(1).capitalized + dropFirst()
     }
 }
